@@ -1,0 +1,67 @@
+# Depth Estimation Configuration File
+# 深度推定の設定ファイル
+
+# 画像入力設定
+input:
+  img1_path: "path/to/image1.jpg"  # 1枚目のカメラ画像のパス
+  img2_path: "path/to/image2.jpg"  # 2枚目のカメラ画像のパス
+
+# カメラ1の内部パラメータ
+camera1:
+  intrinsic:
+    focal_length: 800.0  # 焦点距離（ピクセル単位）
+    cx: 320.0  # 主点のX座標（ピクセル単位）
+    cy: 240.0  # 主点のY座標（ピクセル単位）
+  distortion:
+    # 歪み係数 [k1, k2, p1, p2, k3]
+    k1: 0.1
+    k2: -0.2
+    p1: 0.0
+    p2: 0.0
+    k3: 0.0
+
+# カメラ2の内部パラメータ
+camera2:
+  intrinsic:
+    focal_length: 800.0  # 焦点距離（ピクセル単位）
+    cx: 320.0  # 主点のX座標（ピクセル単位）
+    cy: 240.0  # 主点のY座標（ピクセル単位）
+  distortion:
+    # 歪み係数 [k1, k2, p1, p2, k3]
+    k1: 0.1
+    k2: -0.2
+    p1: 0.0
+    p2: 0.0
+    k3: 0.0
+
+# カメラ間の外部パラメータ
+extrinsic:
+  # 回転行列（3x3、単位行列は並行配置）
+  # 回転角度をオイラー角で指定する場合: [roll, pitch, yaw] (ラジアン)
+  rotation:
+    type: "euler"  # "matrix" または "euler"
+    # type: "matrix" の場合、以下の行列を使用（コメントアウトを外して使用）
+    # matrix:
+    #   - [1.0, 0.0, 0.0]
+    #   - [0.0, 1.0, 0.0]
+    #   - [0.0, 0.0, 1.0]
+    # type: "euler" の場合、以下の角度を使用
+    roll: 0.0   # ロール角（ラジアン）
+    pitch: 0.0  # ピッチ角（ラジアン）
+    yaw: 0.0    # ヨー角（ラジアン）
+  
+  # 並進ベクトル（カメラ間の距離、メートル単位）
+  translation:
+    x: 0.10  # X方向の並進（ベースライン、10cm）
+    y: 0.0   # Y方向の並進
+    z: 0.0   # Z方向の並進
+
+# 出力設定
+output:
+  save_results: true  # 結果を保存するかどうか
+  output_dir: "./result"  # 出力ディレクトリ
+  show_images: true  # 結果を表示するかどうか
+  save_rectified: true  # 校正された画像を保存するかどうか
+  save_disparity: true  # 視差マップを保存するかどうか
+  save_depth: true  # 深度マップを保存するかどうか
+
