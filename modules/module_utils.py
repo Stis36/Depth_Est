@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import yaml
 from pathlib import Path
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, List
 
 
 def load_images(img1_path: str, img2_path: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -29,6 +29,25 @@ def load_images(img1_path: str, img2_path: str) -> Tuple[np.ndarray, np.ndarray]
         raise ValueError(f"画像を読み込めませんでした: {img2_path}")
     
     return img1, img2
+
+
+def load_mvs_images(image_paths: List[str]) -> List[np.ndarray]:
+    """
+    複数のカメラ画像を読み込む（MVS用）
+    
+    Args:
+        image_paths: 画像パスのリスト
+    
+    Returns:
+        images: 読み込まれた画像のリスト
+    """
+    images = []
+    for i, img_path in enumerate(image_paths):
+        img = cv2.imread(img_path)
+        if img is None:
+            raise ValueError(f"画像を読み込めませんでした: {img_path} (ビュー {i+1})")
+        images.append(img)
+    return images
 
 
 def load_config(config_path: str) -> Dict[str, Any]:
@@ -186,6 +205,119 @@ def setup_camera_parameters(config: Dict[str, Any] = None):
     T = np.array([tx, ty, tz], dtype=np.float32)
     
     return camera_matrix1, dist_coeffs1, camera_matrix2, dist_coeffs2, R, T
+
+
+def setup_mvs_parameters(config: Dict[str, Any], reference_view_id: int = 0) -> Tuple[
+    List[np.ndarray], List[np.ndarray], List[np.ndarray], List[np.ndarray]
+]:
+    """
+    MVS用のカメラパラメータを設定（複数ビュー対応）
+    
+    Args:
+        config: 設定辞書
+        reference_view_id: 参照ビューのID（デフォルト: 0）
+    
+    Returns:
+        camera_matrices: 各ビューのカメラ内部パラメータリスト（参照ビューが最初）
+        dist_coeffs_list: 各ビューの歪み係数リスト（参照ビューが最初）
+        R_list: 参照ビューから各ビューへの回転行列リスト（参照ビューは単位行列）
+        T_list: 参照ビューから各ビューへの並進ベクトルリスト（参照ビューはゼロベクトル）
+    """
+    # num_viewsは参照ビュー以外のビュー数
+    num_other_views = config.get('num_views', 2)
+    if num_other_views < 1 or num_other_views > 4:
+        raise ValueError(f"参照ビュー以外のビュー数は1-4の範囲である必要があります。現在: {num_other_views}")
+    
+    # 合計ビュー数 = 参照ビュー + 他のビュー
+    total_views = num_other_views + 1
+    
+    if reference_view_id < 0 or reference_view_id >= total_views:
+        raise ValueError(f"参照ビューIDは0から{total_views-1}の範囲である必要があります。現在: {reference_view_id}")
+    
+    camera_matrices = []
+    dist_coeffs_list = []
+    R_list = []
+    T_list = []
+    
+    # 参照ビューのパラメータ（最初に追加）
+    ref_view = config['views'][reference_view_id]
+    focal_length_ref = float(ref_view['intrinsic']['focal_length'])
+    cx_ref = float(ref_view['intrinsic']['cx'])
+    cy_ref = float(ref_view['intrinsic']['cy'])
+    
+    camera_matrix_ref = np.array([
+        [focal_length_ref, 0, cx_ref],
+        [0, focal_length_ref, cy_ref],
+        [0, 0, 1]
+    ], dtype=np.float32)
+    
+    dist_ref = ref_view['distortion']
+    dist_coeffs_ref = np.array([
+        float(dist_ref['k1']), float(dist_ref['k2']), 
+        float(dist_ref['p1']), float(dist_ref['p2']), float(dist_ref['k3'])
+    ], dtype=np.float32)
+    
+    # 参照ビューは自分自身への変換なので単位行列とゼロベクトル
+    R_ref = np.eye(3, dtype=np.float32)
+    T_ref = np.zeros(3, dtype=np.float32)
+    
+    camera_matrices.append(camera_matrix_ref)
+    dist_coeffs_list.append(dist_coeffs_ref)
+    R_list.append(R_ref)
+    T_list.append(T_ref)
+    
+    # 他のビューのパラメータ（参照ビュー以外）
+    for i in range(total_views):
+        if i == reference_view_id:
+            continue
+        view = config['views'][i]
+        
+        # 内部パラメータ
+        focal_length = float(view['intrinsic']['focal_length'])
+        cx = float(view['intrinsic']['cx'])
+        cy = float(view['intrinsic']['cy'])
+        
+        camera_matrix = np.array([
+            [focal_length, 0, cx],
+            [0, focal_length, cy],
+            [0, 0, 1]
+        ], dtype=np.float32)
+        
+        # 歪み係数
+        dist = view['distortion']
+        dist_coeffs = np.array([
+            float(dist['k1']), float(dist['k2']),
+            float(dist['p1']), float(dist['p2']), float(dist['k3'])
+        ], dtype=np.float32)
+        
+        # 外部パラメータ（参照ビューから見た相対姿勢）
+        extrinsic = view['extrinsic']
+        rotation_config = extrinsic['rotation']
+        
+        R = None
+        if rotation_config['type'] == 'euler':
+            roll = float(rotation_config['roll'])
+            pitch = float(rotation_config['pitch'])
+            yaw = float(rotation_config['yaw'])
+            R = euler_to_rotation_matrix(roll, pitch, yaw)
+        elif rotation_config['type'] == 'matrix':
+            R = np.array(rotation_config['matrix'], dtype=np.float32)
+        else:
+            R = np.eye(3, dtype=np.float32)
+        
+        translation = extrinsic['translation']
+        T = np.array([
+            float(translation['x']),
+            float(translation['y']),
+            float(translation['z'])
+        ], dtype=np.float32)
+        
+        camera_matrices.append(camera_matrix)
+        dist_coeffs_list.append(dist_coeffs)
+        R_list.append(R)
+        T_list.append(T)
+    
+    return camera_matrices, dist_coeffs_list, R_list, T_list
 
 
 def visualize_results(img1: np.ndarray, img2: np.ndarray, 
