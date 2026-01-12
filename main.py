@@ -86,8 +86,8 @@ def estimate_mvs_depth(config: dict = None):
     
     # num_viewsは参照ビュー以外のビュー数
     num_other_views = config.get('num_views', 2)
-    if num_other_views < 1 or num_other_views > 4:
-        raise ValueError(f"参照ビュー以外のビュー数は1-4の範囲である必要があります。現在: {num_other_views}")
+    if num_other_views < 1 or num_other_views > 3:
+        raise ValueError(f"参照ビュー以外のビュー数は1-3の範囲である必要があります。現在: {num_other_views}")
     
     # 合計ビュー数 = 参照ビュー + 他のビュー
     total_views = num_other_views + 1

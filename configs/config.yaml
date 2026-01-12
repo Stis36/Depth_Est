@@ -1,8 +1,8 @@
 # Multi-View Stereo (MVS) Configuration File
 # 複数ビューからの深度推定の設定ファイル
 
-# 参照ビュー以外のビュー数（1-4の範囲）
-# 例: num_views=4 の場合、参照ビュー + 4つのビュー = 合計5ビュー（view0~4）
+# 参照ビュー以外のビュー数（1-3の範囲）
+# 例: num_views=3 の場合、参照ビュー + 3つのビュー = 合計4ビュー（view0~3）
 num_views: 2
 
 # 参照ビュー（基準ビュー）のIDを指定
@@ -10,8 +10,8 @@ num_views: 2
 # 0から(num_views)の範囲で指定してください（合計ビュー数 = num_views + 1）
 reference_view_id: 0
 
-# 各ビューの設定（最大5つ: view0~4）
-# 重要: 参照ビュー以外のすべてのビュー（view1, view2, view3, view4）は、
+# 各ビューの設定（最大4つ: view0~3）
+# 重要: 参照ビュー以外のすべてのビュー（view1, view2, view3）は、
 #       参照ビュー（reference_view_idで指定）から見た相対姿勢を指定してください
 views:
   # ビュー0（参照ビューとして使用される場合）
@@ -95,7 +95,7 @@ views:
         y: 0.10  # Y方向の並進（10cm）
         z: 0.0
 
-  # ビュー3（オプション、num_views >= 4の場合）
+  # ビュー3（オプション、num_views >= 3の場合）
   # 重要: view1, view2と同様に、参照ビューから見た相対姿勢を指定します
   # 参照ビューがview0の場合、view0から見たview3の位置・姿勢を指定します
   - view_id: 3
@@ -121,33 +121,6 @@ views:
         x: -0.10  # X方向の並進（-10cm）
         y: 0.0
         z: 0.0
-
-  # ビュー4（オプション、num_views >= 5の場合）
-  # 重要: view1, view2, view3と同様に、参照ビューから見た相対姿勢を指定します
-  # 参照ビューがview0の場合、view0から見たview4の位置・姿勢を指定します
-  - view_id: 4
-    image_path: "path/to/view4.jpg"
-    intrinsic:
-      focal_length: 800.0
-      cx: 320.0
-      cy: 240.0
-    distortion:
-      k1: 0.1
-      k2: -0.2
-      p1: 0.0
-      p2: 0.0
-      k3: 0.0
-    extrinsic:
-      # 参照ビューから見た相対姿勢（参照ビューがview0の場合、view0から見たview4の位置・姿勢）
-      rotation:
-        type: "euler"  # "matrix" または "euler"
-        roll: 0.0   # ロール角（ラジアン）
-        pitch: 0.0  # ピッチ角（ラジアン）
-        yaw: 0.0    # ヨー角（ラジアン）
-      translation:
-        x: 0.0
-        y: 0.0
-        z: 0.10  # Z方向の並進（10cm）
 
 # MVS深度推定の設定（PatchMatch法）
 mvs:
