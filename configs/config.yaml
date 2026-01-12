@@ -1,67 +1,138 @@
-# Depth Estimation Configuration File
-# 深度推定の設定ファイル
+# Multi-View Stereo (MVS) Configuration File
+# 複数ビューからの深度推定の設定ファイル
 
-# 画像入力設定
-input:
-  img1_path: "path/to/image1.jpg"  # 1枚目のカメラ画像のパス
-  img2_path: "path/to/image2.jpg"  # 2枚目のカメラ画像のパス
+# 参照ビュー以外のビュー数（1-3の範囲）
+# 例: num_views=3 の場合、参照ビュー + 3つのビュー = 合計4ビュー（view0~3）
+num_views: 2
 
-# カメラ1の内部パラメータ
-camera1:
-  intrinsic:
-    focal_length: 800.0  # 焦点距離（ピクセル単位）
-    cx: 320.0  # 主点のX座標（ピクセル単位）
-    cy: 240.0  # 主点のY座標（ピクセル単位）
-  distortion:
-    # 歪み係数 [k1, k2, p1, p2, k3]
-    k1: 0.1
-    k2: -0.2
-    p1: 0.0
-    p2: 0.0
-    k3: 0.0
+# 参照ビュー（基準ビュー）のIDを指定
+# 深度マップはこのビューに対して生成されます
+# 0から(num_views)の範囲で指定してください（合計ビュー数 = num_views + 1）
+reference_view_id: 0
 
-# カメラ2の内部パラメータ
-camera2:
-  intrinsic:
-    focal_length: 800.0  # 焦点距離（ピクセル単位）
-    cx: 320.0  # 主点のX座標（ピクセル単位）
-    cy: 240.0  # 主点のY座標（ピクセル単位）
-  distortion:
-    # 歪み係数 [k1, k2, p1, p2, k3]
-    k1: 0.1
-    k2: -0.2
-    p1: 0.0
-    p2: 0.0
-    k3: 0.0
+# 各ビューの設定（最大4つ: view0~3）
+# 重要: 参照ビュー以外のすべてのビュー（view1, view2, view3）は、
+#       参照ビュー（reference_view_idで指定）から見た相対姿勢を指定してください
+views:
+  # ビュー0（参照ビューとして使用される場合）
+  - view_id: 0
+    image_path: "path/to/view0.jpg"  # 画像パス
+    intrinsic:
+      focal_length: 800.0  # 焦点距離（ピクセル単位）
+      cx: 320.0  # 主点のX座標（ピクセル単位）
+      cy: 240.0  # 主点のY座標（ピクセル単位）
+    distortion:
+      # 歪み係数 [k1, k2, p1, p2, k3]
+      k1: 0.1
+      k2: -0.2
+      p1: 0.0
+      p2: 0.0
+      k3: 0.0
+    extrinsic:
+      # 注意: 参照ビュー以外のビューは、参照ビューから見た相対姿勢を指定してください
+      # 参照ビュー自身の場合は、単位変換（roll=0, pitch=0, yaw=0, translation=0）を指定
+      rotation:
+        type: "euler"
+        roll: 0.0
+        pitch: 0.0
+        yaw: 0.0
+      translation:
+        x: 0.0
+        y: 0.0
+        z: 0.0
 
-# カメラ間の外部パラメータ
-extrinsic:
-  # 回転行列（3x3、単位行列は並行配置）
-  # 回転角度をオイラー角で指定する場合: [roll, pitch, yaw] (ラジアン)
-  rotation:
-    type: "euler"  # "matrix" または "euler"
-    # type: "matrix" の場合、以下の行列を使用（コメントアウトを外して使用）
-    # matrix:
-    #   - [1.0, 0.0, 0.0]
-    #   - [0.0, 1.0, 0.0]
-    #   - [0.0, 0.0, 1.0]
-    # type: "euler" の場合、以下の角度を使用
-    roll: 0.0   # ロール角（ラジアン）
-    pitch: 0.0  # ピッチ角（ラジアン）
-    yaw: 0.0    # ヨー角（ラジアン）
-  
-  # 並進ベクトル（カメラ間の距離、メートル単位）
-  translation:
-    x: 0.10  # X方向の並進（ベースライン、10cm）
-    y: 0.0   # Y方向の並進
-    z: 0.0   # Z方向の並進
+  # ビュー1（参照ビューから見た相対姿勢を指定）
+  # 重要: このビューのextrinsicは、参照ビュー（reference_view_idで指定）から見た相対姿勢です
+  # 参照ビューがview0の場合、view0から見たview1の位置・姿勢を指定します
+  - view_id: 1
+    image_path: "path/to/view1.jpg"
+    intrinsic:
+      focal_length: 800.0
+      cx: 320.0
+      cy: 240.0
+    distortion:
+      k1: 0.1
+      k2: -0.2
+      p1: 0.0
+      p2: 0.0
+      k3: 0.0
+    extrinsic:
+      # 参照ビューから見た相対姿勢（参照ビューがview0の場合、view0から見たview1の位置・姿勢）
+      rotation:
+        type: "euler"  # "matrix" または "euler"
+        roll: 0.0   # ロール角（ラジアン）
+        pitch: 0.0  # ピッチ角（ラジアン）
+        yaw: 0.0    # ヨー角（ラジアン）
+      translation:
+        x: 0.10  # X方向の並進（ベースライン、10cm）
+        y: 0.0   # Y方向の並進
+        z: 0.0   # Z方向の並進
+
+  # ビュー2（オプション、num_views >= 3の場合）
+  # 重要: view1と同様に、参照ビューから見た相対姿勢を指定します
+  # 参照ビューがview0の場合、view0から見たview2の位置・姿勢を指定します
+  - view_id: 2
+    image_path: "path/to/view2.jpg"
+    intrinsic:
+      focal_length: 800.0
+      cx: 320.0
+      cy: 240.0
+    distortion:
+      k1: 0.1
+      k2: -0.2
+      p1: 0.0
+      p2: 0.0
+      k3: 0.0
+    extrinsic:
+      # 参照ビューから見た相対姿勢（参照ビューがview0の場合、view0から見たview2の位置・姿勢）
+      rotation:
+        type: "euler"  # "matrix" または "euler"
+        roll: 0.0   # ロール角（ラジアン）
+        pitch: 0.0  # ピッチ角（ラジアン）
+        yaw: 0.0    # ヨー角（ラジアン）
+      translation:
+        x: 0.0
+        y: 0.10  # Y方向の並進（10cm）
+        z: 0.0
+
+  # ビュー3（オプション、num_views >= 3の場合）
+  # 重要: view1, view2と同様に、参照ビューから見た相対姿勢を指定します
+  # 参照ビューがview0の場合、view0から見たview3の位置・姿勢を指定します
+  - view_id: 3
+    image_path: "path/to/view3.jpg"
+    intrinsic:
+      focal_length: 800.0
+      cx: 320.0
+      cy: 240.0
+    distortion:
+      k1: 0.1
+      k2: -0.2
+      p1: 0.0
+      p2: 0.0
+      k3: 0.0
+    extrinsic:
+      # 参照ビューから見た相対姿勢（参照ビューがview0の場合、view0から見たview3の位置・姿勢）
+      rotation:
+        type: "euler"  # "matrix" または "euler"
+        roll: 0.0   # ロール角（ラジアン）
+        pitch: 0.0  # ピッチ角（ラジアン）
+        yaw: 0.0    # ヨー角（ラジアン）
+      translation:
+        x: -0.10  # X方向の並進（-10cm）
+        y: 0.0
+        z: 0.0
+
+# MVS深度推定の設定（PatchMatch法）
+mvs:
+  depth_range:
+    min_depth: 0.1   # 最小深度（メートル）
+    max_depth: 10.0  # 最大深度（メートル）
+  patch_radius: 3     # NCC計算のパッチ半径
+  iters: 3            # PatchMatchの反復回数（多いほど精度が上がるが計算時間が増える）
 
 # 出力設定
 output:
   save_results: true  # 結果を保存するかどうか
   output_dir: "./result"  # 出力ディレクトリ
   show_images: true  # 結果を表示するかどうか
-  save_rectified: true  # 校正された画像を保存するかどうか
-  save_disparity: true  # 視差マップを保存するかどうか
   save_depth: true  # 深度マップを保存するかどうか
-
