@@ -19,3 +19,4 @@
 - [x] PatchMatch化
 - [x] GPU化
 - [ ] 画像ピラミッド機能
+- [ ] KITTI連続実行(0.5m KeyFrame実行)

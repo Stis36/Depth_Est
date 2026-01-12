@@ -84,20 +84,18 @@ def estimate_mvs_depth(config: dict = None):
     if config is None:
         raise ValueError("設定ファイルが必要です。")
     
-    # num_viewsは参照ビュー以外のビュー数
+    # num_viewsは参照ビュー以外のビュー数（view0は常に参照ビュー）
     num_other_views = config.get('num_views', 2)
     if num_other_views < 1 or num_other_views > 3:
         raise ValueError(f"参照ビュー以外のビュー数は1-3の範囲である必要があります。現在: {num_other_views}")
     
-    # 合計ビュー数 = 参照ビュー + 他のビュー
+    # 合計ビュー数 = 参照ビュー(view0) + 他のビュー
     total_views = num_other_views + 1
     
-    # 参照ビューIDを取得
-    reference_view_id = config.get('reference_view_id', 0)
-    if reference_view_id < 0 or reference_view_id >= total_views:
-        raise ValueError(f"参照ビューIDは0から{total_views-1}の範囲である必要があります。現在: {reference_view_id}")
+    # 参照ビューは常にview0
+    reference_view_id = 0
     
-    print(f"参照ビュー: ビュー {reference_view_id}")
+    print(f"参照ビュー: ビュー 0 (view0)")
     print(f"合計ビュー数: {total_views}（参照ビュー1つ + 他のビュー{num_other_views}つ）")
     
     # 画像パスを取得（すべてのビュー）
@@ -115,11 +113,11 @@ def estimate_mvs_depth(config: dict = None):
     images = load_mvs_images(image_paths)
     print(f"画像サイズ: {images[0].shape}")
     
-    # 参照ビュー
-    reference_img = images[reference_view_id]
+    # 参照ビュー（常にview0）
+    reference_img = images[0]
     
     print("カメラパラメータを設定しています...")
-    camera_matrices, dist_coeffs_list, R_list, T_list = setup_mvs_parameters(config, reference_view_id)
+    camera_matrices, dist_coeffs_list, R_list, T_list = setup_mvs_parameters(config)
     
     # 参照ビュー以外のビューとパラメータ
     other_views = [img for i, img in enumerate(images) if i != reference_view_id]

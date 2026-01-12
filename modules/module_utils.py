@@ -207,40 +207,38 @@ def setup_camera_parameters(config: Dict[str, Any] = None):
     return camera_matrix1, dist_coeffs1, camera_matrix2, dist_coeffs2, R, T
 
 
-def setup_mvs_parameters(config: Dict[str, Any], reference_view_id: int = 0) -> Tuple[
+def setup_mvs_parameters(config: Dict[str, Any]) -> Tuple[
     List[np.ndarray], List[np.ndarray], List[np.ndarray], List[np.ndarray]
 ]:
     """
     MVS用のカメラパラメータを設定（複数ビュー対応）
     
+    注意: view0は常に参照ビューとして使用されます
+    
     Args:
         config: 設定辞書
-        reference_view_id: 参照ビューのID（デフォルト: 0）
     
     Returns:
-        camera_matrices: 各ビューのカメラ内部パラメータリスト（参照ビューが最初）
-        dist_coeffs_list: 各ビューの歪み係数リスト（参照ビューが最初）
-        R_list: 参照ビューから各ビューへの回転行列リスト（参照ビューは単位行列）
-        T_list: 参照ビューから各ビューへの並進ベクトルリスト（参照ビューはゼロベクトル）
+        camera_matrices: 各ビューのカメラ内部パラメータリスト（参照ビューview0が最初）
+        dist_coeffs_list: 各ビューの歪み係数リスト（参照ビューview0が最初）
+        R_list: view0から各ビューへの回転行列リスト（view0は単位行列）
+        T_list: view0から各ビューへの並進ベクトルリスト（view0はゼロベクトル）
     """
-    # num_viewsは参照ビュー以外のビュー数
+    # num_viewsは参照ビュー以外のビュー数（view0は常に参照ビュー）
     num_other_views = config.get('num_views', 2)
     if num_other_views < 1 or num_other_views > 3:
         raise ValueError(f"参照ビュー以外のビュー数は1-3の範囲である必要があります。現在: {num_other_views}")
     
-    # 合計ビュー数 = 参照ビュー + 他のビュー
+    # 合計ビュー数 = 参照ビュー(view0) + 他のビュー
     total_views = num_other_views + 1
-    
-    if reference_view_id < 0 or reference_view_id >= total_views:
-        raise ValueError(f"参照ビューIDは0から{total_views-1}の範囲である必要があります。現在: {reference_view_id}")
     
     camera_matrices = []
     dist_coeffs_list = []
     R_list = []
     T_list = []
     
-    # 参照ビューのパラメータ（最初に追加）
-    ref_view = config['views'][reference_view_id]
+    # 参照ビューのパラメータ（view0、常に最初に追加）
+    ref_view = config['views'][0]
     focal_length_ref = float(ref_view['intrinsic']['focal_length'])
     cx_ref = float(ref_view['intrinsic']['cx'])
     cy_ref = float(ref_view['intrinsic']['cy'])
@@ -266,10 +264,8 @@ def setup_mvs_parameters(config: Dict[str, Any], reference_view_id: int = 0) -> 
     R_list.append(R_ref)
     T_list.append(T_ref)
     
-    # 他のビューのパラメータ（参照ビュー以外）
-    for i in range(total_views):
-        if i == reference_view_id:
-            continue
+    # 他のビューのパラメータ（view1, view2, view3）
+    for i in range(1, total_views):
         view = config['views'][i]
         
         # 内部パラメータ
@@ -290,7 +286,7 @@ def setup_mvs_parameters(config: Dict[str, Any], reference_view_id: int = 0) -> 
             float(dist['p1']), float(dist['p2']), float(dist['k3'])
         ], dtype=np.float32)
         
-        # 外部パラメータ（参照ビューから見た相対姿勢）
+        # 外部パラメータ（view0から見た相対姿勢）
         extrinsic = view['extrinsic']
         rotation_config = extrinsic['rotation']
         
