@@ -2,19 +2,15 @@
 # 複数ビューからの深度推定の設定ファイル
 
 # 参照ビュー以外のビュー数（1-3の範囲）
-# 例: num_views=3 の場合、参照ビュー + 3つのビュー = 合計4ビュー（view0~3）
+# 例: num_views=3 の場合、参照ビュー(view0) + 3つのビュー = 合計4ビュー（view0~3）
+# 注意: view0は常に参照ビュー（基準ビュー）として使用されます
 num_views: 2
 
-# 参照ビュー（基準ビュー）のIDを指定
-# 深度マップはこのビューに対して生成されます
-# 0から(num_views)の範囲で指定してください（合計ビュー数 = num_views + 1）
-reference_view_id: 0
-
 # 各ビューの設定（最大4つ: view0~3）
-# 重要: 参照ビュー以外のすべてのビュー（view1, view2, view3）は、
-#       参照ビュー（reference_view_idで指定）から見た相対姿勢を指定してください
+# 重要: view0は常に参照ビューとして使用されます
+#       view1, view2, view3は、view0から見た相対姿勢を指定してください
 views:
-  # ビュー0（参照ビューとして使用される場合）
+  # ビュー0（常に参照ビュー）
   - view_id: 0
     image_path: "path/to/view0.jpg"  # 画像パス
     intrinsic:
@@ -28,22 +24,9 @@ views:
       p1: 0.0
       p2: 0.0
       k3: 0.0
-    extrinsic:
-      # 注意: 参照ビュー以外のビューは、参照ビューから見た相対姿勢を指定してください
-      # 参照ビュー自身の場合は、単位変換（roll=0, pitch=0, yaw=0, translation=0）を指定
-      rotation:
-        type: "euler"
-        roll: 0.0
-        pitch: 0.0
-        yaw: 0.0
-      translation:
-        x: 0.0
-        y: 0.0
-        z: 0.0
 
-  # ビュー1（参照ビューから見た相対姿勢を指定）
-  # 重要: このビューのextrinsicは、参照ビュー（reference_view_idで指定）から見た相対姿勢です
-  # 参照ビューがview0の場合、view0から見たview1の位置・姿勢を指定します
+  # ビュー1（view0から見た相対姿勢を指定）
+  # 重要: このビューのextrinsicは、view0から見た相対姿勢です
   - view_id: 1
     image_path: "path/to/view1.jpg"
     intrinsic:
@@ -69,8 +52,7 @@ views:
         z: 0.0   # Z方向の並進
 
   # ビュー2（オプション、num_views >= 3の場合）
-  # 重要: view1と同様に、参照ビューから見た相対姿勢を指定します
-  # 参照ビューがview0の場合、view0から見たview2の位置・姿勢を指定します
+  # 重要: view1と同様に、view0から見た相対姿勢を指定します
   - view_id: 2
     image_path: "path/to/view2.jpg"
     intrinsic:
@@ -84,7 +66,7 @@ views:
       p2: 0.0
       k3: 0.0
     extrinsic:
-      # 参照ビューから見た相対姿勢（参照ビューがview0の場合、view0から見たview2の位置・姿勢）
+      # view0から見た相対姿勢
       rotation:
         type: "euler"  # "matrix" または "euler"
         roll: 0.0   # ロール角（ラジアン）
@@ -96,8 +78,7 @@ views:
         z: 0.0
 
   # ビュー3（オプション、num_views >= 3の場合）
-  # 重要: view1, view2と同様に、参照ビューから見た相対姿勢を指定します
-  # 参照ビューがview0の場合、view0から見たview3の位置・姿勢を指定します
+  # 重要: view1, view2と同様に、view0から見た相対姿勢を指定します
   - view_id: 3
     image_path: "path/to/view3.jpg"
     intrinsic:
@@ -111,7 +92,7 @@ views:
       p2: 0.0
       k3: 0.0
     extrinsic:
-      # 参照ビューから見た相対姿勢（参照ビューがview0の場合、view0から見たview3の位置・姿勢）
+      # view0から見た相対姿勢
       rotation:
         type: "euler"  # "matrix" または "euler"
         roll: 0.0   # ロール角（ラジアン）
