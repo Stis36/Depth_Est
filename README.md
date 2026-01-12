@@ -10,10 +10,12 @@
 
 + 1/12 作業
     + ビュー最大数調整
-    + 
+    + MVS一本化
+    + GPU化
 
 ##### Task
 - [x] コード整理
-- [ ] GPU化
 - [x] MVS化
-- [ ] PatchMatch化
+- [x] PatchMatch化
+- [x] GPU化
+- [ ] 画像ピラミッド機能

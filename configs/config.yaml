@@ -127,6 +127,7 @@ mvs:
   depth_range:
     min_depth: 0.1   # 最小深度（メートル）
     max_depth: 10.0  # 最大深度（メートル）
+  
   patch_radius: 3     # NCC計算のパッチ半径
   iters: 3            # PatchMatchの反復回数（多いほど精度が上がるが計算時間が増える）
 
